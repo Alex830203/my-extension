@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>擴充功能設定</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 1200px; /* 增加最大寬度 */
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #555;
+      font-size: 1.5em;
+      margin-top: 30px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 5px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      display: inline-block;
+      background: #007bff;
+      color: #fff;
+      padding: 10px 15px;
+      font-size: 1em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .btn-save {
+      width: 100%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      table-layout: fixed; /* 固定表格布局 */
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+      word-wrap: break-word; /* 讓長字換行 */
+    }
+
+    th {
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    /* 調整標題列寬度 */
+    td.title {
+      max-width: 500px; /* 增加標題欄的寬度 */
+      overflow: hidden;
+      text-overflow: ellipsis; /* 超出文字截斷 */
+      white-space: nowrap;
+    }
+
+    /* 調整欄位寬度 */
+    th:nth-child(1), td:nth-child(1) {
+      width: 8%;
+    }
+
+    th:nth-child(2), td:nth-child(2) {
+      width: 15%;
+    }
+
+    th:nth-child(3), td:nth-child(3) {
+      width: 30%;
+    }
+
+    th:nth-child(4), td:nth-child(4) {
+      width: 15%;
+    }
+
+    th:nth-child(5), td:nth-child(5) {
+      width: 10%;
+    }
+
+    th:nth-child(6), td:nth-child(6) {
+      width: 12%;
+    }
+
+    th:nth-child(7), td:nth-child(7) {
+      width: 10%;
+    }
+
+    td button {
+      background: #dc3545;
+      color: #fff;
+      padding: 5px 10px;
+      font-size: 0.9em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    td button:hover {
+      background: #a71d2a;
+    }
+
+    .btn-submit {
+      background: #28a745;
+      color: #fff;
+    }
+
+    .btn-submit:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>設定表單資料</h1>
+    <form id="options-form">
+      <div class="form-group">
+        <label for="reporter">回報者：</label>
+        <input type="text" id="reporter" name="reporter" value="Alex Chu" required />
+      </div>
+      <div class="form-group">
+        <label for="title">標題：</label>
+        <input type="text" id="title" name="title" required />
+      </div>
+      <div class="form-group">
+        <label for="date">日期：</label>
+        <input type="date" id="date" name="date" required />
+      </div>
+      <div class="form-group">
+        <label for="time">時間：</label>
+        <input type="time" id="time" name="time" required />
+      </div>
+      <button type="submit" class="btn-save">儲存</button>
+    </form>
+
+    <h2>儲存的資料</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>編號</th>
+          <th>回報者</th>
+          <th>標題</th>
+          <th>日期</th>
+          <th>時間</th>
+          <th>創建時間</th> <!-- 新增創建時間欄位 -->
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="entries-table">
+        <!-- 儲存的資料會顯示在這裡 -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
