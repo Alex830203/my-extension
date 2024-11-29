@@ -101,11 +101,11 @@ document.getElementById('entries-table').addEventListener('click', (event) => {
       console.log("entry:", entry); // 顯示從存儲中獲取的資料
 
       // 發送資料給 content script
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.query({ active: false, currentWindow: true }, (tabs) => {
         const activeTab = tabs[0];
         if (activeTab) {
-          console.log("Active tab ID:", activeTab.id);  // 確保頁面已被選中
-          chrome.tabs.sendMessage(activeTab.id, { action: "fill_form", data: { test: "Testing log message" } }, (response) => {
+          console.log("Tab title:", activeTab.title);  // 確保頁面已被選中
+          chrome.tabs.sendMessage(activeTab.id, { action: "fill_form", data: entry }, (response) => {
             if (chrome.runtime.lastError) {
               console.error("錯誤發生:", chrome.runtime.lastError); // 打印錯誤訊息
             } else if (response?.success) {
