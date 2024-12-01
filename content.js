@@ -13,7 +13,7 @@ if (window.location.hostname === "slphc.atlassian.net") {
           console.log("Button 'createGlobalItem' clicked.");
 
           // 2. 模擬填寫表單
-          setTimeout(() => {
+          setTimeout(async () => {
             // 填寫 summary-field
             const summaryField = document.getElementById("summary-field");
             if (summaryField) {
@@ -24,38 +24,99 @@ if (window.location.hostname === "slphc.atlassian.net") {
               throw new Error("無法找到表單欄位 'summary-field'。");
             }
 
-            // 填寫 assignee-field
-            const assigneeField = document.getElementById("assignee-field");
-            if (assigneeField) {
-              assigneeField.focus(); // 聚焦輸入框
+            // 處理時間欄位
+            const dateFields = [
+              { id: "customfield_10430-field", value: message.data.date },
+              { id: "customfield_10431-field", value: message.data.date },
+              { id: "customfield_10465-field", value: message.data.date },
+              { id: "customfield_10438-field", value: message.data.date }
+            ];
 
-              const reporterName = message.data.reporter || "";
-              if (reporterName) {
-                // 模擬鍵盤輸入
-                reporterName.split("").forEach((char) => {
-                  const keyEvent = new KeyboardEvent("keydown", { key: char });
-                  assigneeField.dispatchEvent(keyEvent);
-                  assigneeField.value += char; // 模擬輸入字符
-                  assigneeField.dispatchEvent(new Event("input", { bubbles: true }));
-                });
+            const fillField = async (fieldId, value) => {
+              return new Promise((resolve, reject) => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                  field.focus();
+                  field.value = value || "";
+                  field.dispatchEvent(new Event("input", { bubbles: true }));
+                  console.log(`Field '${fieldId}' filled with value: '${value}'.`);
+                  resolve();
+                } else {
+                  reject(new Error(`無法找到表單欄位 '${fieldId}'。`));
+                }
+              });
+            };
 
-                // 模擬按下 Enter 鍵
-                setTimeout(() => {
-                  const enterEvent = new KeyboardEvent("keydown", { key: "Enter", code: "Enter" });
-                  assigneeField.dispatchEvent(enterEvent);
-                  assigneeField.dispatchEvent(new Event("blur", { bubbles: true })); // 失去焦點
-                  console.log("Assignee field submitted with Enter key.");
-                }, 5000); // 確保輸入完成後按下 Enter
-
-                console.log(`Field 'assignee-field' filled with value: ${reporterName}`);
-              } else {
-                throw new Error("未提供 'reporter' 值。");
-              }
-            } else {
-              throw new Error("無法找到表單欄位 'assignee-field'。");
+            // 填寫時間欄位
+            for (const { id, value } of dateFields) {
+              await fillField(id, value);
             }
+            console.log("Time fields filled successfully.");
 
-            sendResponse({ success: true, message: "表單已成功填寫。" });
+            // 處理三個選項欄位
+            const fields = [
+              { id: "assignee-field", value: message.data.reporter },
+              { id: "customfield_10428-field", value: "cherry" },
+              { id: "customfield_10440-field", value: "Ivory" }
+            ];
+
+            const fillOptionField = async (fieldId, value) => {
+              return new Promise((resolve, reject) => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                  field.focus();
+
+                  if (value) {
+                    let charIndex = 0;
+                    const typeChar = () => {
+                      if (charIndex < value.length) {
+                        const char = value[charIndex];
+                        field.value += char;
+                        field.dispatchEvent(new Event("input", { bubbles: true }));
+
+                        const keyEvent = new KeyboardEvent("keydown", { key: char, code: char });
+                        field.dispatchEvent(keyEvent);
+
+                        charIndex++;
+                        setTimeout(typeChar, 50); // 每次輸入間隔 50 毫秒
+                      } else {
+                        // 等待輸入完成後檢查選項
+                        setTimeout(() => {
+                          const candidate = Array.from(document.querySelectorAll("span"))
+                            .find(el => el.textContent === value);
+                          if (candidate) {
+                            candidate.click();
+                            console.log(`Option '${value}' selected for field '${fieldId}'.`);
+                            resolve(); // 完成當前欄位的操作
+                          } else {
+                            reject(new Error(`未找到匹配的選項 '${value}' for field '${fieldId}'。`));
+                          }
+                        }, 2000); // 等候選項渲染
+                      }
+                    };
+
+                    typeChar();
+                  } else {
+                    reject(new Error(`未提供 '${fieldId}' 的值。`));
+                  }
+                } else {
+                  reject(new Error(`無法找到表單欄位 '${fieldId}'。`));
+                }
+              });
+            };
+
+            // 處理三個選項欄位
+            try {
+              for (const { id, value } of fields) {
+                await fillOptionField(id, value); // 等待每個欄位處理完成
+              }
+
+              console.log("All fields filled successfully.");
+              sendResponse({ success: true, message: "表單已成功填寫。" });
+            } catch (error) {
+              console.error("Error:", error.message);
+              sendResponse({ success: false, message: error.message });
+            }
           }, 5000); // 延遲 5 秒以確保表單元素已加載
         } else {
           throw new Error("Button 'createGlobalItem' not found.");
