@@ -55,9 +55,9 @@ if (window.location.hostname === "slphc.atlassian.net") {
 
             // 處理三個選項欄位
             const fields = [
-              { id: "assignee-field", value: message.data.reporter },
-              { id: "customfield_10428-field", value: "cherry" },
-              { id: "customfield_10440-field", value: "Ivory" }
+              { id: "assignee-field", value: "tim Xie" },
+              { id: "customfield_10428-field", value: message.data.reporter },
+              { id: "customfield_10440-field", value: message.data.reporter }
             ];
 
             const fillOptionField = async (fieldId, value) => {
@@ -91,7 +91,7 @@ if (window.location.hostname === "slphc.atlassian.net") {
                           } else {
                             reject(new Error(`未找到匹配的選項 '${value}' for field '${fieldId}'。`));
                           }
-                        }, 2000); // 等候選項渲染
+                        }, 3000); // 等候選項渲染
                       }
                     };
 
@@ -118,6 +118,31 @@ if (window.location.hostname === "slphc.atlassian.net") {
               sendResponse({ success: false, message: error.message });
             }
           }, 5000); // 延遲 5 秒以確保表單元素已加載
+
+          // 選擇 Done
+          setTimeout(() => {
+            const statusButton = document.querySelector("#issue\\.fields\\.status-view\\.status-button");
+            if (statusButton) {
+              statusButton.click();
+              console.log("Status button clicked.");
+
+              setTimeout(() => {
+                // 查找 Done 選項
+                const doneOption = Array.from(document.querySelectorAll("span"))
+                  .find(el => el.textContent === "Done");
+
+                if (doneOption) {
+                  doneOption.click();
+                  console.log("Status set to 'Done'.");
+                  sendResponse({ success: true, message: "表單已成功填寫並設為 Done。" });
+                } else {
+                  throw new Error("未找到 'Done' 選項。");
+                }
+              }, 1000); // 等待狀態選單顯示
+            } else {
+              throw new Error("無法找到狀態按鈕。");
+            }
+          }, 20000); // 等待填表操作完成
         } else {
           throw new Error("Button 'createGlobalItem' not found.");
         }
