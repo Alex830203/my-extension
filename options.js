@@ -28,35 +28,97 @@ document.addEventListener('DOMContentLoaded', () => {
   displayEntries(); // 顯示儲存的表格
 });
 
+let currentPage = 1; // 當前頁面
+const entriesPerPage = 10; // 每頁顯示的條目數
+
 // 顯示儲存的表格，並依創建時間降序排列
 function displayEntries() {
   const tableBody = document.getElementById('entries-table');
   tableBody.innerHTML = ''; // 清空表格
 
   chrome.storage.sync.get({ entries: [] }, (data) => {
-    // 依創建時間降序排列
     const sortedEntries = data.entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // 計算分頁資料
+    const totalEntries = sortedEntries.length;
+    const totalPages = Math.ceil(totalEntries / entriesPerPage);
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    const endIndex = currentPage * entriesPerPage;
+    const entriesToDisplay = sortedEntries.slice(startIndex, endIndex); // 取出對應頁面的資料
 
-    sortedEntries.forEach((entry, index) => {
+    entriesToDisplay.forEach((entry, index) => {
       const row = document.createElement('tr');
-      const createdAtInTaipei = convertToTaipeiTime(entry.createdAt); // 轉換為台北時間
+      const createdAtInTaipei = convertToTaipeiTime(entry.createdAt);
+
+      // 將標題中的關鍵字轉換為超連結
+      const titleWithLink = convertTitleToLink(entry.title);
 
       row.innerHTML = `
-        <td>${index + 1}</td> <!-- 顯示編號 -->
+        <td>${startIndex + index + 1}</td> <!-- 顯示編號 -->
         <td>${entry.reporter}</td>
-        <td class="title">${entry.title}</td>
+        <td class="title">${titleWithLink}</td> <!-- 顯示帶超連結的標題 -->
         <td>${entry.date}</td>
         <td>${entry.time}</td>
-        <td>${createdAtInTaipei}</td> <!-- 顯示創建時間 (台灣時間) -->
+        <td>${createdAtInTaipei}</td>
         <td>
-          <button class="btn-submit" data-index="${index}">送單</button>
-          <button class="delete-btn" data-index="${index}">刪除</button>
+          <button class="btn-submit" data-index="${startIndex + index}">送單</button>
+          <button class="delete-btn" data-index="${startIndex + index}">刪除</button>
         </td>
       `;
 
       tableBody.appendChild(row);
     });
+
+    // 更新分頁顯示
+    updatePagination(totalPages);
   });
+}
+
+// 將標題中的關鍵字轉換為超連結
+function convertTitleToLink(title) {
+  const regex = /\[([A-Za-z0-9\-]+)\]/; // 使用正則表達式匹配類似 [PCPP-122] 的部分
+  const match = title.match(regex);
+
+  if (match && match[1]) {
+    const ticketId = match[1];
+    const jiraUrl = `https://slphc.atlassian.net/browse/${ticketId}`; // 构建 Jira URL
+    return title.replace(regex, `<a href="${jiraUrl}" target="_blank">${match[0]}</a>`); // 替換為超連結
+  }
+
+  return title; // 如果沒有匹配到票號，返回原始標題
+}
+
+// 更新分頁顯示
+function updatePagination(totalPages) {
+  const paginationContainer = document.getElementById('pagination');
+  paginationContainer.innerHTML = ''; // 清空分頁容器
+
+  // 顯示上一頁按鈕
+  if (currentPage > 1) {
+    const prevButton = document.createElement('button');
+    prevButton.innerText = '上一頁';
+    prevButton.onclick = () => {
+      currentPage--;
+      displayEntries(); // 更新資料
+    };
+    paginationContainer.appendChild(prevButton);
+  }
+
+  // 顯示下一頁按鈕
+  if (currentPage < totalPages) {
+    const nextButton = document.createElement('button');
+    nextButton.innerText = '下一頁';
+    nextButton.onclick = () => {
+      currentPage++;
+      displayEntries(); // 更新資料
+    };
+    paginationContainer.appendChild(nextButton);
+  }
+
+  // 顯示頁碼
+  const pageNumber = document.createElement('span');
+  pageNumber.innerText = `第 ${currentPage} 頁 / 共 ${totalPages} 頁`;
+  paginationContainer.appendChild(pageNumber);
 }
 
 // 將時間轉換為台灣時間 (UTC+8)
