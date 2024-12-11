@@ -121,6 +121,20 @@ function updatePagination(totalPages) {
   paginationContainer.appendChild(pageNumber);
 }
 
+document.getElementById("search").addEventListener("input", function () {
+  const filter = this.value.toLowerCase(); // 獲取搜尋字串
+  const rows = document.querySelectorAll("#entries-table tr"); // 獲取所有表格列
+
+  rows.forEach((row) => {
+    const cells = row.querySelectorAll("td"); // 獲取每列中的所有儲存格
+    const match = Array.from(cells).some((cell) =>
+      cell.textContent.toLowerCase().includes(filter)
+    ); // 檢查是否有儲存格包含搜尋字串
+
+    row.style.display = match ? "" : "none"; // 根據匹配結果顯示或隱藏列
+  });
+});
+
 // 將時間轉換為台灣時間 (UTC+8)
 function convertToTaipeiTime(utcTime) {
   const date = new Date(utcTime);
