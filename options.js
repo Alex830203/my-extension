@@ -30,48 +30,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let currentPage = 1; // 當前頁面
 const entriesPerPage = 10; // 每頁顯示的條目數
+let filteredEntries = []; // 用於儲存搜尋結果的條目
 
 // 顯示儲存的表格，並依創建時間降序排列
 function displayEntries() {
   const tableBody = document.getElementById('entries-table');
   tableBody.innerHTML = ''; // 清空表格
 
-  chrome.storage.sync.get({ entries: [] }, (data) => {
-    const sortedEntries = data.entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    // 計算分頁資料
-    const totalEntries = sortedEntries.length;
-    const totalPages = Math.ceil(totalEntries / entriesPerPage);
-    const startIndex = (currentPage - 1) * entriesPerPage;
-    const endIndex = currentPage * entriesPerPage;
-    const entriesToDisplay = sortedEntries.slice(startIndex, endIndex); // 取出對應頁面的資料
+  // 如果搜尋結果為空，則顯示全部條目
+  const entriesToShow = filteredEntries.length > 0 ? filteredEntries : [];
+  
+  // 計算分頁資料
+  const totalEntries = entriesToShow.length;
+  const totalPages = Math.ceil(totalEntries / entriesPerPage);
+  const startIndex = (currentPage - 1) * entriesPerPage;
+  const endIndex = currentPage * entriesPerPage;
+  const entriesToDisplay = entriesToShow.slice(startIndex, endIndex); // 取出對應頁面的資料
 
-    entriesToDisplay.forEach((entry, index) => {
-      const row = document.createElement('tr');
-      const createdAtInTaipei = convertToTaipeiTime(entry.createdAt);
+  entriesToDisplay.forEach((entry, index) => {
+    const row = document.createElement('tr');
+    const createdAtInTaipei = convertToTaipeiTime(entry.createdAt);
+    const titleWithLink = convertTitleToLink(entry.title);
 
-      // 將標題中的關鍵字轉換為超連結
-      const titleWithLink = convertTitleToLink(entry.title);
+    row.innerHTML = `
+      <td>${startIndex + index + 1}</td>
+      <td>${entry.reporter}</td>
+      <td class="title">${titleWithLink}</td>
+      <td>${entry.date}</td>
+      <td>${entry.time}</td>
+      <td>${createdAtInTaipei}</td>
+      <td>
+        <button class="btn-submit" data-index="${startIndex + index}">送單</button>
+        <button class="delete-btn" data-index="${startIndex + index}">刪除</button>
+      </td>
+    `;
 
-      row.innerHTML = `
-        <td>${startIndex + index + 1}</td> <!-- 顯示編號 -->
-        <td>${entry.reporter}</td>
-        <td class="title">${titleWithLink}</td> <!-- 顯示帶超連結的標題 -->
-        <td>${entry.date}</td>
-        <td>${entry.time}</td>
-        <td>${createdAtInTaipei}</td>
-        <td>
-          <button class="btn-submit" data-index="${startIndex + index}">送單</button>
-          <button class="delete-btn" data-index="${startIndex + index}">刪除</button>
-        </td>
-      `;
-
-      tableBody.appendChild(row);
-    });
+    tableBody.appendChild(row);
+  });
 
     // 更新分頁顯示
-    updatePagination(totalPages);
-  });
+  updatePagination(totalPages);
 }
 
 // 將標題中的關鍵字轉換為超連結
@@ -104,6 +102,18 @@ function updatePagination(totalPages) {
     paginationContainer.appendChild(prevButton);
   }
 
+  // 顯示頁碼按鈕
+  for (let page = 1; page <= totalPages; page++) {
+    const pageButton = document.createElement('button');
+    pageButton.innerText = page;
+    pageButton.disabled = page === currentPage; // 當前頁面按鈕不可點擊
+    pageButton.onclick = () => {
+      currentPage = page;
+      displayEntries(); // 更新資料
+    };
+    paginationContainer.appendChild(pageButton);
+  }
+
   // 顯示下一頁按鈕
   if (currentPage < totalPages) {
     const nextButton = document.createElement('button');
@@ -115,23 +125,23 @@ function updatePagination(totalPages) {
     paginationContainer.appendChild(nextButton);
   }
 
-  // 顯示頁碼
+  // 顯示頁碼狀態
   const pageNumber = document.createElement('span');
   pageNumber.innerText = `第 ${currentPage} 頁 / 共 ${totalPages} 頁`;
   paginationContainer.appendChild(pageNumber);
 }
 
-document.getElementById("search").addEventListener("input", function () {
+document.getElementById('search').addEventListener('input', function () {
   const filter = this.value.toLowerCase(); // 獲取搜尋字串
-  const rows = document.querySelectorAll("#entries-table tr"); // 獲取所有表格列
-
-  rows.forEach((row) => {
-    const cells = row.querySelectorAll("td"); // 獲取每列中的所有儲存格
-    const match = Array.from(cells).some((cell) =>
-      cell.textContent.toLowerCase().includes(filter)
-    ); // 檢查是否有儲存格包含搜尋字串
-
-    row.style.display = match ? "" : "none"; // 根據匹配結果顯示或隱藏列
+  chrome.storage.sync.get({ entries: [] }, (data) => {
+    // 根據搜尋過濾條目
+    filteredEntries = data.entries.filter((entry) =>
+      Object.values(entry).some((value) =>
+        String(value).toLowerCase().includes(filter)
+      )
+    );
+    currentPage = 1; // 搜尋後回到第一頁
+    displayEntries(); // 重新顯示表格
   });
 });
 
