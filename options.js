@@ -6,7 +6,25 @@ document.getElementById('options-form').addEventListener('submit', (event) => {
   const time = document.getElementById('time').value;
   const createdAt = new Date().toISOString(); // 創建時間 (ISO 格式)
 
+  // 提取 title 中的 ticketId
+  const ticketId = extractTicketId(title);
+
+  if (!ticketId) {
+    alert('標題中未包含有效的票號！');
+    return;
+  }
+
   chrome.storage.sync.get({ entries: [] }, (data) => {
+    // 檢查是否有重複的 ticketId
+    const isDuplicate = data.entries.some((entry) =>
+      extractTicketId(entry.title) === ticketId
+    );
+
+    if (isDuplicate) {
+      alert(`票號 [${ticketId}] 已存在，請檢查資料！`);
+      return;
+    }
+
     const newEntry = { reporter, title, date, time, createdAt };
     const updatedEntries = [newEntry, ...data.entries]; // 頭插入新資料
 
@@ -16,6 +34,14 @@ document.getElementById('options-form').addEventListener('submit', (event) => {
     });
   });
 });
+
+// 提取 title 中的 ticketId
+function extractTicketId(title) {
+  const regex = /\[([A-Za-z0-9\-]+)\]/; // 匹配類似 [PCPP-122] 的格式
+  const match = title.match(regex);
+  return match ? match[1] : null; // 如果匹配成功，返回票號；否則返回 null
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const now = new Date();
