@@ -30,7 +30,15 @@ document.getElementById('options-form').addEventListener('submit', (event) => {
 
     chrome.storage.sync.set({ entries: updatedEntries }, () => {
       alert('設定已儲存！');
-      displayEntries(); // 更新表格
+      chrome.storage.sync.get({ entries: [] }, (data) => {
+        const searchValue = document.getElementById('search').value.toLowerCase(); // 取得目前的搜尋值
+        filteredEntries = data.entries.filter((entry) =>
+          Object.values(entry).some((value) =>
+            String(value).toLowerCase().includes(searchValue)
+          )
+        );
+        displayEntries(); // 重新顯示表格
+      });
     });
   });
 });
@@ -51,7 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('date').value = currentDate;
   document.getElementById('time').value = currentTime;
 
-  displayEntries(); // 顯示儲存的表格
+  chrome.storage.sync.get({ entries: [] }, (data) => {
+    filteredEntries = data.entries; // 初始時顯示所有資料
+    displayEntries();
+  });
 });
 
 let currentPage = 1; // 當前頁面
@@ -198,8 +209,16 @@ document.getElementById('entries-table').addEventListener('click', (event) => {
 
       chrome.storage.sync.set({ entries: updatedEntries }, () => {
         alert('項目已刪除！');
-        displayEntries(); // 更新表格
-      });
+        chrome.storage.sync.get({ entries: [] }, (data) => {
+          const searchValue = document.getElementById('search').value.toLowerCase(); // 取得目前的搜尋值
+          filteredEntries = data.entries.filter((entry) =>
+            Object.values(entry).some((value) =>
+              String(value).toLowerCase().includes(searchValue)
+            )
+          );
+          displayEntries(); // 重新顯示表格
+        });
+      });      
     });
   }
 
