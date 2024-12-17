@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "自動填寫表單擴充功能",
+  "name": "自動填寫功能",
   "version": "1.0",
   "permissions": ["storage", "scripting", "activeTab"],
   "action": {
